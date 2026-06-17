@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 
+export const maxDuration = 60
+
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const SYSTEM_PROMPT = `Tu es un expert en prospection commerciale B2B pour GreenYellow, opérateur de transition énergétique filiale d'Ardian.
@@ -94,7 +96,8 @@ export async function POST(req: NextRequest) {
     const data = JSON.parse(jsonMatch[0])
     return NextResponse.json(data)
   } catch (err) {
-    console.error('Prospecting API error:', err)
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+    const message = err instanceof Error ? err.message : String(err)
+    console.error('Prospecting API error:', message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
