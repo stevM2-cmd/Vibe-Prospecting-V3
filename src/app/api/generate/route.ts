@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 
+export const maxDuration = 30
+
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req: NextRequest) {
@@ -78,7 +80,8 @@ Format : liste claire et structurée, prête à copier-coller dans Salesforce.`,
 
     return NextResponse.json({ result: content.text })
   } catch (err) {
-    console.error('Generate API error:', err)
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+    const message = err instanceof Error ? err.message : String(err)
+    console.error('Generate API error:', message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
