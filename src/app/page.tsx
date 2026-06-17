@@ -8,7 +8,7 @@ import PromptBar from '@/components/PromptBar'
 import ThinkingBlock from '@/components/ThinkingBlock'
 import ProspectCard from '@/components/ProspectCard'
 import DetailPanel from '@/components/DetailPanel'
-import { EXAMPLE_QUERIES, MOCK_PROSPECTS, Prospect, HistoryItem, Filiere } from '@/lib/data'
+import { EXAMPLE_QUERIES, Prospect, HistoryItem, Filiere } from '@/lib/data'
 
 type SortMode = 'score' | 'capex' | 'alpha'
 
@@ -23,6 +23,7 @@ export default function Home() {
   const [currentQuery, setCurrentQuery] = useState('')
   const [sortMode, setSortMode] = useState<SortMode>('score')
   const [querySummary, setQuerySummary] = useState('')
+  const [apiError, setApiError] = useState<string | null>(null)
 
   const sortProspects = useCallback((data: Prospect[], mode: SortMode): Prospect[] => {
     const sorted = [...data]
@@ -38,8 +39,8 @@ export default function Home() {
     setSelectedId(null)
     setCurrentQuery(q)
     setProspects([])
+    setApiError(null)
 
-    // Add to history
     const histItem: HistoryItem = {
       id: Date.now().toString(),
       query: q,
@@ -48,46 +49,27 @@ export default function Home() {
     }
 
     try {
-      const apiKey = process.env.NEXT_PUBLIC_USE_MOCK === 'true' ? null : 'real'
+      const res = await fetch('/api/prospect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q, filieres }),
+      })
 
-      let data: Prospect[]
-      let summary = ''
-
-      if (!apiKey || process.env.NEXT_PUBLIC_USE_MOCK === 'true') {
-        // Mock mode - use local data + simulate delay
-        await new Promise(r => setTimeout(r, 4500))
-        data = MOCK_PROSPECTS
-        summary = `${data.length} prospects identifiés correspondant à votre requête`
-      } else {
-        // Real API
-        await new Promise(r => setTimeout(r, 4500)) // Show thinking animation
-        const res = await fetch('/api/prospect', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: q, filieres }),
-        })
-
-        if (!res.ok) throw new Error('API error')
-        const json = await res.json()
-        data = json.prospects ?? []
-        summary = json.query_summary ?? ''
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error ?? `Erreur API (${res.status})`)
       }
 
+      const json = await res.json()
+      const data: Prospect[] = json.prospects ?? []
       const sorted = sortProspects(data, sortMode)
       setProspects(sorted)
-      setQuerySummary(summary)
+      setQuerySummary(json.query_summary ?? '')
       histItem.count = sorted.length
       setHistory(prev => [histItem, ...prev].slice(0, 10))
       setHasResults(true)
-    } catch {
-      // Fallback to mock on error
-      await new Promise(r => setTimeout(r, 500))
-      const data = sortProspects(MOCK_PROSPECTS, sortMode)
-      setProspects(data)
-      setQuerySummary('Données de démonstration (mode hors-ligne)')
-      histItem.count = data.length
-      setHistory(prev => [histItem, ...prev].slice(0, 10))
-      setHasResults(true)
+    } catch (err) {
+      setApiError(err instanceof Error ? err.message : 'Erreur inconnue')
     } finally {
       setIsLoading(false)
     }
@@ -167,6 +149,30 @@ export default function Home() {
 
             {/* Thinking */}
             <ThinkingBlock visible={isLoading} query={currentQuery} />
+
+            {/* Error state */}
+            {apiError && !isLoading && (
+              <div
+                style={{
+                  margin: '20px 0',
+                  padding: '14px 16px',
+                  background: '#1A0808',
+                  border: '1px solid #7F1D1D',
+                  borderRadius: 8,
+                  color: '#FCA5A5',
+                  fontSize: 12,
+                  lineHeight: 1.6,
+                }}
+              >
+                <div style={{ fontWeight: 600, marginBottom: 4, color: '#F87171' }}>
+                  Erreur lors de la recherche
+                </div>
+                <div style={{ marginBottom: 8 }}>{apiError}</div>
+                <div style={{ color: '#9CA3AF', fontSize: 11 }}>
+                  Vérifiez que la variable <code style={{ background: '#2D1515', padding: '1px 5px', borderRadius: 3 }}>ANTHROPIC_API_KEY</code> est bien définie dans les variables d&apos;environnement de votre déploiement.
+                </div>
+              </div>
+            )}
 
             {/* Results */}
             {hasResults && !isLoading && (

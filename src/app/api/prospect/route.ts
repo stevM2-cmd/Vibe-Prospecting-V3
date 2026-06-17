@@ -37,7 +37,7 @@ Réponds UNIQUEMENT en JSON valide avec la structure suivante :
       "region": "Région France",
       "score": 85,
       "capex": "~1.5M€",
-      "capex_raw": 1500000,
+      "capexRaw": 1500000,
       "filieres": ["PV", "EE"],
       "signals": [
         { "type": "expansion", "label": "Libellé court" },
