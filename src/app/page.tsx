@@ -167,10 +167,7 @@ export default function Home() {
                 <div style={{ fontWeight: 600, marginBottom: 4, color: '#F87171' }}>
                   Erreur lors de la recherche
                 </div>
-                <div style={{ marginBottom: 8 }}>{apiError}</div>
-                <div style={{ color: '#9CA3AF', fontSize: 11 }}>
-                  Vérifiez que la variable <code style={{ background: '#2D1515', padding: '1px 5px', borderRadius: 3 }}>ANTHROPIC_API_KEY</code> est bien définie dans les variables d&apos;environnement de votre déploiement.
-                </div>
+                <div>{apiError}</div>
               </div>
             )}
 
