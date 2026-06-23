@@ -1,4 +1,3 @@
-export const runtime = 'edge'
 export const maxDuration = 60
 
 const SYSTEM_PROMPT = `Tu es un expert en prospection commerciale B2B pour GreenYellow, opérateur de transition énergétique filiale d'Ardian.
@@ -77,8 +76,8 @@ export async function POST(req: Request) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 4000,
+        model: 'claude-sonnet-4-6',
+        max_tokens: 8000,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userMessage }],
       }),
