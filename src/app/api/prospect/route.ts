@@ -1,4 +1,3 @@
-export const runtime = 'edge'
 export const maxDuration = 60
 
 const SYSTEM_PROMPT = `Tu es un expert en prospection commerciale B2B pour GreenYellow, opérateur de transition énergétique filiale d'Ardian.
